@@ -1,0 +1,7 @@
+torch
+torchvision
+torchaudio
+transformers
+git+https://github.com/openai/whisper.git
+requests
+notebook
