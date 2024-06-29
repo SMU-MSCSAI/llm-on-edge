@@ -2,6 +2,7 @@ torch
 torchvision
 torchaudio
 transformers
+huggingface_hub
 git+https://github.com/openai/whisper.git
 requests
 notebook
