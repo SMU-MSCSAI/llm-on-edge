@@ -110,3 +110,24 @@ def plot_measurements(unquantized_model_size, quantized_model_size, unquantized_
 
     plt.show()
 
+def generate_response(model, tokenizer, prompt, max_length=150):
+    inputs = tokenizer(prompt, return_tensors="pt")
+    outputs = model.generate(inputs["input_ids"], max_length=max_length)
+    generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return generated_text
+
+def load_or_download_model(model_name, model_dir):
+    # Check if the model directory exists
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+        # Download and save the model and tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
+        tokenizer.save_pretrained(model_dir)
+        model.save_pretrained(model_dir)
+    else:
+        # Load the model and tokenizer from the local directory
+        tokenizer = AutoTokenizer.from_pretrained(model_dir)
+        model = AutoModelForCausalLM.from_pretrained(model_dir)
+    
+    return model, tokenizer
