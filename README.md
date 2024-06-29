@@ -43,3 +43,9 @@ pip install -r requirements.txt --upgrade
 ### Error Handling
 1. Add your env into the jupyter kernel, run the following command
 ```python -m ipykernel install --user --name=llm_quant --display-name "Python (llm_quant)"```
+
+
+### NB: After running inference measrement using profiling, run the below commands to analyze the result
+```bash
+cd codes
+tensorboard --logdir=./log

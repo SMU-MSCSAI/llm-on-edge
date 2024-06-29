@@ -6,3 +6,5 @@ huggingface_hub
 git+https://github.com/openai/whisper.git
 requests
 notebook
+tensorboard
+matplotlib
