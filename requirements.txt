@@ -8,3 +8,6 @@ requests
 notebook
 tensorboard
 matplotlib
+python-dotenv
+huggingface_hub
+black

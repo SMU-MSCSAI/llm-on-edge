@@ -32,6 +32,18 @@ conda activate llm_quant
 # Install the required libraries from requirements.txt
 pip install -r requirements.txt
 
+## Setup your environment
+If you happen to want to use google Gemma 2 model follow the instructions below
+1. Create huggingface account
+2. Request an access to gemma 2
+3. Create an access token
+4. create .env file and insert these info
+```
+   HF_TOKEN=your_hugging_face_token
+   HF_USERNAME=your_hugging_face_username
+```
+You're good to go.
+
 ## Tips
 
 Tip1: To update your library run the following command after you've updated their version in the requirement.txt
