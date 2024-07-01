@@ -100,32 +100,43 @@ def load_and_save_model(model_name, model_dir):
 def quantize_model_dynamic(model, tokenizer, quantized_model_dir):
     # Set the quantization backend for Apple Silicon
     torch.backends.quantized.engine = 'qnnpack'
-    
+
     if not os.path.exists(quantized_model_dir):
         os.makedirs(quantized_model_dir, exist_ok=True)
-    
-    print("Setting up dynamic quantization...")
-    try:
-        logging.info("Quantizing the model...")
-        
-        # Apply dynamic quantization
-        with tqdm(total=1, desc="Quantizing model", unit="step") as pbar:
-            quantized_model = torch.quantization.quantize_dynamic(
-                model, {torch.nn.Linear}, dtype=torch.qint8
-            )
-            pbar.update(1)
-            
-        logging.info("Model quantized successfully.")
-        logging.info(f"Saving quantized model and tokenizer to {quantized_model_dir}")
-        
-        # Save the quantized model and tokenizer
-        torch.save(quantized_model.state_dict(), f"{quantized_model_dir}/pytorch_model.bin")
-        tokenizer.save_pretrained(quantized_model_dir)
-        logging.info(f"Quantized model and tokenizer saved to {quantized_model_dir}")
-    except Exception as e:
-        logging.error(f"Failed to quantize the model: {e}")
-        raise
+        print("Setting up dynamic quantization...")
+        try:
+            logging.info("Quantizing the model...")
 
+            # Apply dynamic quantization
+            with tqdm(total=1, desc="Quantizing model", unit="step") as pbar:
+                quantized_model = torch.quantization.quantize_dynamic(
+                    model, {torch.nn.Linear}, dtype=torch.qint8
+                )
+                pbar.update(1)
+
+            logging.info("Model quantized successfully.")
+            logging.info(f"Saving quantized model and tokenizer to {quantized_model_dir}")
+
+            # Save the quantized model and tokenizer
+            model_to_save = quantized_model.module if hasattr(quantized_model, 'module') else quantized_model
+            torch.save(model_to_save.state_dict(), f"{quantized_model_dir}/pytorch_model.bin")
+            model.config.save_pretrained(quantized_model_dir)
+            tokenizer.save_pretrained(quantized_model_dir)
+            logging.info(f"Quantized model and tokenizer saved to {quantized_model_dir}")
+        except Exception as e:
+            logging.error(f"Failed to quantize the model: {e}")
+            raise
+    # If the quantized model already exists, load it
+    else:
+        print(f"Quantized model already exists in {quantized_model_dir}")
+        try:
+            model_config = AutoModelForCausalLM.from_pretrained(quantized_model_dir).config
+            quantized_model = AutoModelForCausalLM.from_config(model_config)
+            quantized_model.load_state_dict(torch.load(f"{quantized_model_dir}/pytorch_model.bin"))
+            return quantized_model
+        except Exception as e:
+            logging.error(f"Failed to load the quantized model: {e}")
+            raise
     return quantized_model
 
 # Function for static quantization
@@ -190,7 +201,7 @@ def plot_measurements(unquantized_model_size, quantized_model_size, unquantized_
 # Function to generate a response
 def generate_response(model, tokenizer, prompt, max_length=150):
     inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(inputs["input_ids"], max_length=max_length)
+    outputs = model.generate(inputs["input_ids"], max_length=max_length, do_sample=True, top_k=50, top_p=0.95, temperature=0.9, num_return_sequences=1, repetition_penalty=2.0)
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return generated_text
 
